@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordDoc - Advanced Document Creator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Tesseract.js OCR library -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-file-word brand-icon"></i>
+                <div class="brand-text">
+                    <h1>WordDoc</h1>
+                    <span>Instant Word Creator</span>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <nav class="tabs-nav">
+                <button class="tab-btn active" id="btn-tab-builder" onclick="switchTab('builder')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Paste & Build
+                </button>
+                <button class="tab-btn" id="btn-tab-template" onclick="switchTab('template')">
+                    <i class="fa-solid fa-file-import"></i> Fill Template
+                </button>
+            </nav>
+
+            <div class="divider"></div>
+
+            <!-- Configuration Form -->
+            <div class="config-section">
+                <h3>Document Config</h3>
+                
+                <div class="form-group">
+                    <label for="doc-title">Document Title</label>
+                    <input type="text" id="doc-title" value="My Project Report" placeholder="Enter title...">
+                </div>
+
+                <!-- Template Tab Configuration (Only shown in template tab) -->
+                <div id="template-config" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle"></i> Upload a template file on the right side to start filling out fields.
+                    </div>
+                </div>
+
+                <!-- Builder Tab Configuration -->
+                <div id="builder-config">
+                    <div class="form-group">
+                        <label for="doc-style">Layout Format Style</label>
+                        <select id="doc-style" onchange="handleStyleChange()">
+                            <option value="screenshot-log">📸 Screenshot Log / Step Guide</option>
+                            <option value="meeting-notes">📝 Meeting Notes / Agenda</option>
+                            <option value="code-doc">💻 Code Documentation</option>
+                            <option value="standard">📄 Standard Business Report</option>
+                        </select>
+                    </div>
+
+                    <!-- Meeting Notes Metadata Grid (Visible only when Meeting Notes is selected) -->
+                    <div id="meeting-metadata" class="metadata-grid" style="display: none;">
+                        <h4>Meeting Details</h4>
+                        <div class="form-group">
+                            <label for="meet-date">Date</label>
+                            <input type="text" id="meet-date" placeholder="e.g. Oct 24, 2026">
+                        </div>
+                        <div class="form-group">
+                            <label for="meet-location">Location</label>
+                            <input type="text" id="meet-location" placeholder="e.g. Zoom / Boardroom">
+                        </div>
+                        <div class="form-group">
+                            <label for="meet-attendees">Attendees</label>
+                            <input type="text" id="meet-attendees" placeholder="e.g. John, Jane, Sarah">
+                        </div>
+                        <div class="form-group">
+                            <label for="meet-facilitator">Facilitator</label>
+                            <input type="text" id="meet-facilitator" placeholder="e.g. Dave Smith">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="btn btn-primary btn-block" id="btn-generate" onclick="generateDocument()">
+                    <i class="fa-solid fa-file-arrow-down"></i> Generate Word Doc
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content">
+            <!-- Builder Tab View -->
+            <div id="view-builder" class="tab-view active">
+                <div class="editor-header">
+                    <div class="header-info">
+                        <h2>Document Workspace</h2>
+                        <p>Paste screenshots (Ctrl+V) or text anywhere on this page, or use the quick buttons below.</p>
+                    </div>
+                    <div class="actions" style="display: flex; gap: 8px;">
+                        <a href="sample_outline.md" download class="btn btn-secondary btn-sm">
+                            <i class="fa-solid fa-download"></i> Sample Outline (.md)
+                        </a>
+                        <button class="btn btn-secondary btn-sm" onclick="clearWorkspace()">
+                            <i class="fa-solid fa-trash-can"></i> Clear All
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Quick Add Buttons -->
+                <div class="quick-add-bar">
+                    <button class="add-btn" onclick="addBlock('heading')"><i class="fa-solid fa-heading"></i> Heading</button>
+                    <button class="add-btn" onclick="addBlock('paragraph')"><i class="fa-solid fa-paragraph"></i> Paragraph</button>
+                    <button class="add-btn" onclick="addBlock('list')"><i class="fa-solid fa-list-ul"></i> Bullet List</button>
+                    <button class="add-btn" onclick="addBlock('code')"><i class="fa-solid fa-code"></i> Code Block</button>
+                    <button class="add-btn" onclick="addBlock('image')"><i class="fa-solid fa-image"></i> Screenshot Slot</button>
+                    <button class="add-btn" style="border-color: var(--accent); color: var(--text-primary); background-color: rgba(99, 102, 241, 0.1);" onclick="triggerOutlineUpload()"><i class="fa-solid fa-file-import"></i> Import Format/Outline (.md, .txt, .png, .jpg)</button>
+                    <input type="file" id="outline-file-input" accept=".md,.txt,image/*" style="display: none;" onchange="handleOutlineUpload(event)">
+
+                </div>
+
+
+                <!-- Floating Paste Zone Hint -->
+                <div class="paste-indicator" id="paste-indicator">
+                    <i class="fa-solid fa-clipboard-check pulse-icon"></i> Ready to paste screenshots or text... (Press Ctrl+V)
+                </div>
+
+                <!-- Main Blocks Container -->
+                <div class="blocks-container" id="blocks-container">
+                    <!-- Blocks will be injected here dynamically -->
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fa-solid fa-copy"></i>
+                        </div>
+                        <h3>Your Workspace is Empty</h3>
+                        <p>Simply take a screenshot (e.g. Snipping Tool) and press <strong>Ctrl + V</strong> on your keyboard to instantly insert it, or copy/paste text from anywhere!</p>
+                        <div class="empty-actions">
+                            <button class="btn btn-secondary" onclick="addBlock('heading')">
+                                <i class="fa-solid fa-plus"></i> Add Heading
+                            </button>
+                            <button class="btn btn-secondary" onclick="addBlock('image')">
+                                <i class="fa-solid fa-image"></i> Add Image Slot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Tab View -->
+            <div id="view-template" class="tab-view">
+                <div class="editor-header">
+                    <div class="header-info">
+                        <h2>Template Filler</h2>
+                        <p>Upload your own template (.docx, .md, .txt) containing placeholders like <code>{{ title }}</code> or <code>{{ img_screenshot }}</code>.</p>
+                    </div>
+                </div>
+
+                <!-- Upload Drag & Drop Area -->
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="template-file" accept=".docx,.md,.txt" style="display: none;" onchange="handleTemplateUpload(event)">
+                    <div class="upload-icon">
+                        <i class="fa-solid fa-file-word"></i>
+                    </div>
+                    <h3>Drag & Drop your Template here</h3>
+                    <p>or click to browse your computer (.docx, .md, .txt files only)</p>
+
+                    <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
+                        <a href="sample_template.docx" download class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">
+                            <i class="fa-solid fa-download"></i> Sample Template (.docx)
+                        </a>
+                        <a href="sample_template.md" download class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">
+                            <i class="fa-solid fa-download"></i> Sample Template (.md)
+                        </a>
+                    </div>
+
+
+                    <div class="file-info" id="uploaded-file-info" style="display: none;">
+                        <span class="file-name" id="file-name-label">template.docx</span>
+                        <button class="btn btn-danger btn-sm" onclick="clearTemplate(event)">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Form Container -->
+                <div class="dynamic-form-card" id="template-form-card" style="display: none;">
+                    <h3>Fill Template Placeholders</h3>
+                    <p class="subtitle">We detected the following fields in your template. Images support Ctrl+V pasting!</p>
+                    
+                    <form id="template-dynamic-form" class="dynamic-form">
+                        <!-- Dynamic fields will be loaded here -->
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Spinner Modal overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner-box">
+            <div class="spinner"></div>
+            <p id="loading-text">Generating Document...</p>
+        </div>
+    </div>
+
+    <!-- Frontend Script -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+.idea/
+.vscode/
+*.docx
+# Exclude dynamically generated test documents except the samples
+!frontend/sample_template.docx
+!frontend/sample_template.md
+!frontend/sample_outline.md

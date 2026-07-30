@@ -221,11 +221,21 @@ def generate_from_scratch():
     title_text = doc_data.get('title', 'Untitled Document')
     blocks = doc_data.get('blocks', [])
     
+    # Check if a base template docx is uploaded
+    base_template_path = None
+    if 'base_template' in request.files:
+        base_template_file = request.files['base_template']
+        if base_template_file and base_template_file.filename.endswith('.docx'):
+            base_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.docx'))
+            base_template_file.save(base_template_path)
+
     # Save uploaded images to temp files and map them to their image_id
     image_map = {}
     temp_image_files = []
     
     for key in request.files:
+        if key == 'base_template':
+            continue
         img_file = request.files[key]
         if img_file and img_file.filename != '':
             temp_img_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.png'))
@@ -234,16 +244,20 @@ def generate_from_scratch():
             image_map[key] = temp_img_path
             
     try:
-        # Create a new Word document
-        doc = Document()
-        
-        # Page Margins (1 inch all sides)
-        sections = doc.sections
-        for section in sections:
-            section.top_margin = Inches(1)
-            section.bottom_margin = Inches(1)
-            section.left_margin = Inches(1)
-            section.right_margin = Inches(1)
+        # Create a new Word document or open from base template
+        if base_template_path:
+            doc = Document(base_template_path)
+        else:
+            doc = Document()
+            # Page Margins (1 inch all sides) only applied for blank documents,
+            # since a template already has its own margins defined!
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Inches(1)
+                section.bottom_margin = Inches(1)
+                section.left_margin = Inches(1)
+                section.right_margin = Inches(1)
+
             
         # Global Color Palettes & Fonts based on style
         font_name = 'Segoe UI' if style in ['screenshot-log', 'code-doc'] else 'Calibri'
@@ -406,6 +420,10 @@ def generate_from_scratch():
         for f in temp_image_files:
             if os.path.exists(f):
                 os.remove(f)
+        # Clean up base template if it exists
+        if base_template_path and os.path.exists(base_template_path):
+            os.remove(base_template_path)
+
 
 if __name__ == '__main__':
     # Start flask server on local port 5000

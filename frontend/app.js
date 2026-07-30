@@ -8,6 +8,8 @@ let activeImageBlockId = null;
 let uploadedTemplateFile = null;
 let uploadedTextTemplateContent = '';
 let templateVariables = [];
+let uploadedBaseTemplateFile = null;
+
 
 // DOM Elements
 const views = {
@@ -879,7 +881,12 @@ async function generateFromBuilder() {
     
     formData.append('document_data', JSON.stringify(documentData));
     
+    if (uploadedBaseTemplateFile) {
+        formData.append('base_template', uploadedBaseTemplateFile);
+    }
+    
     try {
+
         const response = await fetch(`${API_BASE}/generate-from-scratch`, {
             method: 'POST',
             body: formData
@@ -1358,7 +1365,12 @@ async function generateFromTextTemplate() {
     
     formData.append('document_data', JSON.stringify(documentData));
     
+    if (uploadedBaseTemplateFile) {
+        formData.append('base_template', uploadedBaseTemplateFile);
+    }
+    
     try {
+
         const response = await fetch(`${API_BASE}/generate-from-scratch`, {
             method: 'POST',
             body: formData
@@ -1386,5 +1398,33 @@ async function generateFromTextTemplate() {
         showLoading(false);
     }
 }
+
+// Base Template Upload Handlers
+function handleBaseTemplateUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.docx')) {
+        showToast('Please select a valid Word (.docx) document!', 'error');
+        return;
+    }
+    
+    uploadedBaseTemplateFile = file;
+    document.getElementById('base-template-name').textContent = file.name;
+    document.getElementById('base-template-info').style.display = 'flex';
+    showToast('Base styling template loaded!', 'success');
+}
+
+function clearBaseTemplate(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    uploadedBaseTemplateFile = null;
+    document.getElementById('base-template-info').style.display = 'none';
+    document.getElementById('base-template-file').value = '';
+    showToast('Base template removed', 'info');
+}
+
 
 

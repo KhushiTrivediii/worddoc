@@ -68,6 +68,18 @@
                         </select>
                     </div>
 
+                    <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                        <label>Base Document Template (Optional)</label>
+                        <input type="file" id="base-template-file" accept=".docx" style="display: none;" onchange="handleBaseTemplateUpload(event)">
+                        <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="document.getElementById('base-template-file').click()">
+                            <i class="fa-solid fa-file-import"></i> Upload Base .docx
+                        </button>
+                        <div id="base-template-info" style="display: none; align-items: center; justify-content: space-between; margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px; border-radius: 8px;">
+                            <span id="base-template-name" style="font-size: 12px; color: var(--success); font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">template.docx</span>
+                            <button type="button" class="ctrl-btn btn-delete" onclick="clearBaseTemplate(event)" style="padding: 2px; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+
                     <!-- Meeting Notes Metadata Grid (Visible only when Meeting Notes is selected) -->
                     <div id="meeting-metadata" class="metadata-grid" style="display: none;">
                         <h4>Meeting Details</h4>

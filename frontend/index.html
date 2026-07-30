@@ -82,9 +82,9 @@
 
                     <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
                         <label>Base Document Template (Optional)</label>
-                        <input type="file" id="base-template-file" accept=".docx" style="display: none;" onchange="handleBaseTemplateUpload(event)">
+                        <input type="file" id="base-template-file" accept=".docx,.doc" style="display: none;" onchange="handleBaseTemplateUpload(event)">
                         <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="document.getElementById('base-template-file').click()">
-                            <i class="fa-solid fa-file-import"></i> Upload Base .docx
+                            <i class="fa-solid fa-file-import"></i> Upload Base .docx / .doc
                         </button>
                         <div id="base-template-info" style="display: none; align-items: center; justify-content: space-between; margin-top: 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px; border-radius: 8px;">
                             <span id="base-template-name" style="font-size: 12px; color: var(--success); font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">template.docx</span>
@@ -186,18 +186,19 @@
                 <div class="editor-header">
                     <div class="header-info">
                         <h2>Template Filler</h2>
-                        <p>Upload your own template (.docx, .md, .txt) containing placeholders like <code>{{ title }}</code> or <code>{{ img_screenshot }}</code>.</p>
+                        <p>Upload your own template (.docx, .doc, .md, .txt) containing placeholders like <code>{{ title }}</code> or <code>{{ img_screenshot }}</code>.</p>
                     </div>
                 </div>
 
                 <!-- Upload Drag & Drop Area -->
                 <div class="upload-zone" id="upload-zone">
-                    <input type="file" id="template-file" accept=".docx,.md,.txt" style="display: none;" onchange="handleTemplateUpload(event)">
+                    <input type="file" id="template-file" accept=".docx,.doc,.md,.txt" style="display: none;" onchange="handleTemplateUpload(event)">
                     <div class="upload-icon">
                         <i class="fa-solid fa-file-word"></i>
                     </div>
                     <h3>Drag & Drop your Template here</h3>
-                    <p>or click to browse your computer (.docx, .md, .txt files only)</p>
+                    <p>or click to browse your computer (.docx, .doc, .md, .txt files only)</p>
+
 
                     <div style="margin-top: 16px; display: flex; justify-content: center; gap: 8px;">
                         <a href="sample_template.docx" download class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">

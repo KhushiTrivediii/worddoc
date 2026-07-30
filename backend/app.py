@@ -17,6 +17,26 @@ CORS(app)  # Enable CORS for frontend communication
 def index():
     return send_file(os.path.join(app.static_folder, 'index.html'))
 
+def convert_doc_to_docx(doc_path):
+    """Converts a .doc file to .docx using Microsoft Word COM automation."""
+    try:
+        import win32com.client as win32
+        word = win32.Dispatch('Word.Application')
+        word.Visible = False
+        
+        abs_doc_path = os.path.abspath(doc_path)
+        doc = word.Documents.Open(abs_doc_path)
+        abs_docx_path = os.path.splitext(abs_doc_path)[0] + '.docx'
+        
+        # SaveAs2 with FileFormat=12 (docx format)
+        doc.SaveAs2(abs_docx_path, FileFormat=12)
+        doc.Close(False)
+        word.Quit()
+        return abs_docx_path
+    except Exception as e:
+        print(f"Word COM conversion failed: {e}")
+        raise e
+
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -83,12 +103,26 @@ def analyze_template():
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
     
-    if not file.filename.endswith('.docx'):
-        return jsonify({"error": "File must be a .docx document"}), 400
+    if not (file.filename.endswith('.docx') or file.filename.endswith('.doc')):
+        return jsonify({"error": "File must be a .doc or .docx document"}), 400
     
     # Save template to a temporary location
-    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.docx'))
+    is_doc = file.filename.endswith('.doc')
+    temp_suffix = '.doc' if is_doc else '.docx'
+    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix=temp_suffix))
     file.save(temp_path)
+    
+    # If legacy .doc file, convert to .docx first
+    if is_doc:
+        try:
+            temp_docx_path = convert_doc_to_docx(temp_path)
+            os.remove(temp_path)
+            temp_path = temp_docx_path
+        except Exception as e:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            return jsonify({"error": f"Failed to convert legacy .doc file to .docx: {str(e)}"}), 500
+
     
     try:
         doc = DocxTemplate(temp_path)
@@ -124,8 +158,22 @@ def generate_from_template():
     template_file = request.files['template']
     
     # Save the template to a temporary location
-    temp_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.docx'))
+    is_doc = template_file.filename.endswith('.doc')
+    temp_suffix = '.doc' if is_doc else '.docx'
+    temp_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix=temp_suffix))
     template_file.save(temp_template_path)
+    
+    # If legacy .doc file, convert to .docx first
+    if is_doc:
+        try:
+            temp_docx_path = convert_doc_to_docx(temp_template_path)
+            os.remove(temp_template_path)
+            temp_template_path = temp_docx_path
+        except Exception as e:
+            if os.path.exists(temp_template_path):
+                os.remove(temp_template_path)
+            return jsonify({"error": f"Failed to convert legacy .doc file to .docx: {str(e)}"}), 500
+
     
     # Parse text context variables
     context_data = request.form.get('context', '{}')
@@ -221,13 +269,27 @@ def generate_from_scratch():
     title_text = doc_data.get('title', 'Untitled Document')
     blocks = doc_data.get('blocks', [])
     
-    # Check if a base template docx is uploaded
+    # Check if a base template doc/docx is uploaded
     base_template_path = None
     if 'base_template' in request.files:
         base_template_file = request.files['base_template']
-        if base_template_file and base_template_file.filename.endswith('.docx'):
-            base_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.docx'))
+        if base_template_file and (base_template_file.filename.endswith('.docx') or base_template_file.filename.endswith('.doc')):
+            is_doc_base = base_template_file.filename.endswith('.doc')
+            temp_suffix = '.doc' if is_doc_base else '.docx'
+            base_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix=temp_suffix))
             base_template_file.save(base_template_path)
+            
+            # Convert legacy doc base template to docx
+            if is_doc_base:
+                try:
+                    temp_docx_path = convert_doc_to_docx(base_template_path)
+                    os.remove(base_template_path)
+                    base_template_path = temp_docx_path
+                except Exception as e:
+                    if os.path.exists(base_template_path):
+                        os.remove(base_template_path)
+                    return jsonify({"error": f"Failed to convert base .doc template to .docx: {str(e)}"}), 500
+
 
     # Check if a title logo/banner image is uploaded
     title_logo_path = None

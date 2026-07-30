@@ -559,8 +559,8 @@ function handleTemplateFile(file) {
     const extension = file.name.split('.').pop().toLowerCase();
     const imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp'];
     
-    if (!['docx', 'md', 'txt'].concat(imageExtensions).includes(extension)) {
-        showToast('Please select a valid template file (.docx, .md, .txt, or image)!', 'error');
+    if (!['docx', 'doc', 'md', 'txt'].concat(imageExtensions).includes(extension)) {
+        showToast('Please select a valid template file (.docx, .doc, .md, .txt, or image)!', 'error');
         return;
     }
     
@@ -569,8 +569,8 @@ function handleTemplateFile(file) {
     uploadedFileInfo.style.display = 'inline-flex';
     uploadZone.classList.add('file-loaded');
     
-    if (extension === 'docx') {
-        // Analyze .docx template via backend
+    if (extension === 'docx' || extension === 'doc') {
+        // Analyze template via backend
         analyzeTemplateFile(file);
     } else if (imageExtensions.includes(extension)) {
         // Analyze image format template via OCR
@@ -931,7 +931,7 @@ async function generateFromTemplate() {
     }
     
     const extension = uploadedTemplateFile.name.split('.').pop().toLowerCase();
-    if (extension !== 'docx') {
+    if (extension !== 'docx' && extension !== 'doc') {
         // Compile Markdown/Text templates locally
         await generateFromTextTemplate();
         return;
@@ -1414,8 +1414,9 @@ function handleBaseTemplateUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    if (!file.name.endsWith('.docx')) {
-        showToast('Please select a valid Word (.docx) document!', 'error');
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (extension !== 'docx' && extension !== 'doc') {
+        showToast('Please select a valid Word (.docx or .doc) document!', 'error');
         return;
     }
     

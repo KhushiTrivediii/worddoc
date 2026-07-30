@@ -229,12 +229,20 @@ def generate_from_scratch():
             base_template_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.docx'))
             base_template_file.save(base_template_path)
 
+    # Check if a title logo/banner image is uploaded
+    title_logo_path = None
+    if 'title_logo' in request.files:
+        title_logo_file = request.files['title_logo']
+        if title_logo_file and title_logo_file.filename != '':
+            title_logo_path = os.path.join(app.config['UPLOAD_FOLDER'], tempfile.mktemp(suffix='.png'))
+            title_logo_file.save(title_logo_path)
+
     # Save uploaded images to temp files and map them to their image_id
     image_map = {}
     temp_image_files = []
     
     for key in request.files:
-        if key == 'base_template':
+        if key in ['base_template', 'title_logo']:
             continue
         img_file = request.files[key]
         if img_file and img_file.filename != '':
@@ -242,6 +250,7 @@ def generate_from_scratch():
             img_file.save(temp_img_path)
             temp_image_files.append(temp_img_path)
             image_map[key] = temp_img_path
+
             
     try:
         # Create a new Word document or open from base template
@@ -271,6 +280,15 @@ def generate_from_scratch():
         elif style == 'code-doc':
             accent_color = RGBColor(0x02, 0x84, 0xc7)  # Sky 600
             
+        # Add Title Logo/Banner if provided
+        if title_logo_path:
+            p_logo = doc.add_paragraph()
+            p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER if style != 'meeting-notes' else WD_ALIGN_PARAGRAPH.LEFT
+            p_logo.paragraph_format.space_before = Pt(12)
+            p_logo.paragraph_format.space_after = Pt(12)
+            run_logo = p_logo.add_run()
+            run_logo.add_picture(title_logo_path, width=Inches(3.5))
+
         # Add Document Title
         p_title = doc.add_paragraph()
         p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER if style != 'meeting-notes' else WD_ALIGN_PARAGRAPH.LEFT
@@ -423,6 +441,10 @@ def generate_from_scratch():
         # Clean up base template if it exists
         if base_template_path and os.path.exists(base_template_path):
             os.remove(base_template_path)
+        # Clean up title logo if it exists
+        if title_logo_path and os.path.exists(title_logo_path):
+            os.remove(title_logo_path)
+
 
 
 if __name__ == '__main__':

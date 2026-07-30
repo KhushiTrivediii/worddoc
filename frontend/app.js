@@ -9,6 +9,8 @@ let uploadedTemplateFile = null;
 let uploadedTextTemplateContent = '';
 let templateVariables = [];
 let uploadedBaseTemplateFile = null;
+let uploadedTitleLogoFile = null;
+
 
 
 // DOM Elements
@@ -884,8 +886,12 @@ async function generateFromBuilder() {
     if (uploadedBaseTemplateFile) {
         formData.append('base_template', uploadedBaseTemplateFile);
     }
+    if (uploadedTitleLogoFile) {
+        formData.append('title_logo', uploadedTitleLogoFile);
+    }
     
     try {
+
 
         const response = await fetch(`${API_BASE}/generate-from-scratch`, {
             method: 'POST',
@@ -1368,8 +1374,12 @@ async function generateFromTextTemplate() {
     if (uploadedBaseTemplateFile) {
         formData.append('base_template', uploadedBaseTemplateFile);
     }
+    if (uploadedTitleLogoFile) {
+        formData.append('title_logo', uploadedTitleLogoFile);
+    }
     
     try {
+
 
         const response = await fetch(`${API_BASE}/generate-from-scratch`, {
             method: 'POST',
@@ -1425,6 +1435,34 @@ function clearBaseTemplate(e) {
     document.getElementById('base-template-file').value = '';
     showToast('Base template removed', 'info');
 }
+
+// Title Logo Upload Handlers
+function handleTitleLogoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file!', 'error');
+        return;
+    }
+    
+    uploadedTitleLogoFile = file;
+    document.getElementById('title-logo-name').textContent = file.name;
+    document.getElementById('title-logo-info').style.display = 'flex';
+    showToast('Title banner/logo loaded!', 'success');
+}
+
+function clearTitleLogo(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    uploadedTitleLogoFile = null;
+    document.getElementById('title-logo-info').style.display = 'none';
+    document.getElementById('title-logo-file').value = '';
+    showToast('Title banner/logo removed', 'info');
+}
+
 
 
 

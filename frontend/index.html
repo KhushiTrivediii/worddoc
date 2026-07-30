@@ -47,6 +47,18 @@
                 <div class="form-group">
                     <label for="doc-title">Document Title</label>
                     <input type="text" id="doc-title" value="My Project Report" placeholder="Enter title...">
+                    
+                    <!-- Title Image/Banner Slot -->
+                    <div style="margin-top: 10px;">
+                        <input type="file" id="title-logo-file" accept="image/*" style="display: none;" onchange="handleTitleLogoUpload(event)">
+                        <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="document.getElementById('title-logo-file').click()" style="padding: 6px 12px; font-size: 12px; height: 30px;">
+                            <i class="fa-solid fa-image"></i> Add Title Banner/Logo
+                        </button>
+                        <div id="title-logo-info" style="display: none; align-items: center; justify-content: space-between; margin-top: 6px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); padding: 4px 8px; border-radius: 6px;">
+                            <span id="title-logo-name" style="font-size: 11px; color: var(--accent); font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">logo.png</span>
+                            <button type="button" class="ctrl-btn btn-delete" onclick="clearTitleLogo(event)" style="padding: 2px; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Template Tab Configuration (Only shown in template tab) -->
